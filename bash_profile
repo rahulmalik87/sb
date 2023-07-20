@@ -7,7 +7,7 @@ PORT=""
 alias tap='patch -p1 < /tmp/1.patch'
 alias csc='cscope -i ./cscope.files'
 alias gs='git status'
-alias cdp='cd ~/pstress/src'
+alias cdp='cd ~/MySQL/pstress'
 alias gpc='git push -f -u origin `echo $(basename $PWD)`' #git push current
 alias cdh='cd $HOME/MySQL'
 alias cdsh='cd $HOME/MySQL/scripts'
@@ -287,9 +287,8 @@ function sandbox() {
       XC=$XC" --xtrabackup-plugin-dir=$HOME/MySQL/src/$BX/bld/plugin_output_directory"
     fi
       export TEST_PATH="$HOME/MySQL/src/$BX/bld/mysql-test"
-      export MYSQL_o8=$HOME/MySQL/src/o8/bld/runtime_output_directory/mysql
       alias cdb='$MYSQL  --socket $SOCKET -uroot -e "create database test;"'
-      alias dt='$MYSQL_o8  --socket $SOCKET -uroot test'
+      alias dt='$MYSQL --socket $SOCKET -uroot test'
 
     #options based on PXB
     if [ -z $BBX ] ; then
