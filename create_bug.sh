@@ -37,20 +37,27 @@ fi
 
 
 # 6) Copy $SRC/bld./plugin/galera_replication/galera/libgalera_smm.so into core_executable
-cp "$SRC/bld/plugin/galera_replication/galera/libgalera_smm.so" "$core_dir"
+#cp "$SRC/bld/plugin/galera_replication/galera/libgalera_smm.so" "$core_dir"
+cp /home/rahulmalik/MySQL/src/o83/bld/plugin/galera_replication/galera/libgalera_smm.so $core_dir
+cp /home/rahulmalik/MySQL/src/o84/bld/client/mariadb $core_dir
+
 
 # 7) Copy $SRC/bld/./runtime_output_directory/mysqld into core_executable
-cp "$SRC/bld//runtime_output_directory/mysqld" "$core_dir"
+#cp "$SRC/bld//runtime_output_directory/mysqld" "$core_dir"
 
-cp /home/rahulmalik/MySQL/src/pstress/script.sh $main_dir
-cp /home/rahulmalik/MySQL/src/pstress/src/pstress.cfg $main_dir
-cp -r $SRC/bld/mysql-test/var $main_dir
+
+mkdir -p "$main_dir/data"
+cp -r $SRC/bld/mysql-test/var/* $main_dir/data
 
 cd "$SRC" 
 git diff > "$main_dir/git_diff.patch"
 
 # Append Git commit ID as a comment at the end of script.sh
-echo "# Git commit ID: $(git rev-parse HEAD)" >> "$main_dir/script.sh"
+echo "# Git source difference  commit ID: $(git rev-parse HEAD)" >> "$main_dir/script.sh"
+
+# pstress scripts to copy
+cp /home/rahulmalik/MySQL/src/sb/fk_3.sh $main_dir
+cp /home/rahulmalik/MySQL/src/sb/pstress.cfg $main_dir
 
 cd /home/rahulmalik/MySQL/bugs
 
@@ -60,3 +67,6 @@ tar -czvf "issue_$N.tar.gz" "issue_$N"
 # 9) Optionally remove the main directory after archiving it
 # rm -rf "$main_dir"
 
+echo "After confirming, please upload using aws s3 cp issue_$N.tar.gz  s3://codership-uploads" 
+
+echo "Place where it would be upload https://codership-uploads.s3.eu-central-1.amazonaws.com/issue_$N.tar.gz"

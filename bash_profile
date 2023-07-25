@@ -4,10 +4,11 @@ BX=""
 BBX="" #if set means, running with backup directory:w
 PORT=""
 #global alias
+PATH=$PATH":/home/rahulmalik/.local/bin"
 alias tap='patch -p1 < /tmp/1.patch'
 alias csc='cscope -i ./cscope.files'
 alias gs='git status'
-alias cdp='cd ~/MySQL/pstress'
+alias cdp='cd ~/MySQL/src/pstress'
 alias gpc='git push -f -u origin `echo $(basename $PWD)`' #git push current
 alias cdh='cd $HOME/MySQL'
 alias cdsh='cd $HOME/MySQL/scripts'
@@ -15,6 +16,9 @@ alias cds='cd $HOME/study'
 alias cdsb='cd $HOME/MySQL/src/sb'
 alias cdc='cd $HOME/study/cpp'
 export xb="$HOME/MySQL/rahul-xb"
+export PS="$HOME/MySQL/src/pstress/bld/src/pstress-ms"
+export GC_TEST="$HOME/MySQL/src/QA/testing/gctest"
+alias cdg='cd $GC_TEST'
 alias f='find . -name '
 alias bkpup='$XB $XC --backup --stream=xbstream | xbcloud put `date "+%m%d%H%M%Y%S"` $XBCLOUD_CREDENTIALS'
 
@@ -45,7 +49,7 @@ elif [ "kill" = $1 ]; then
  killall -9 mysqld
  return 0;
 elif [ "con" = $1 ]; then
- $MYSQL --socket $SOCKET -uroot
+ $MYSQL8 --socket $SRC/bld/mysql-test/var/tmp/mysqld.$2.sock -uroot  test
 elif [ "bkp" = $1 ]; then
  if [ -z $BBX ]; then
   echo " use xtrabckup sandox "
@@ -147,19 +151,10 @@ ctags --langmap=c++:+.ic --langmap=c++:+.i -L cscope.files
 #call macos related methods
 darwin() {
 eval "$(/opt/homebrew/bin/brew shellenv)"
-export ctags='/usr/local/Cellar/ctags/5.8_1/bin/ctags'
+export ctags='/opt/homebrew/bin/ctags'
 export LDFLAGS="-L/opt/homebrew/opt/openssl@1.1/lib -L/opt/homebrew/opt/libgcrypt/lib -L/opt/homebrew/opt/libev/lib  -L/opt/homebrew/opt/zstd/lib -L/opt/homebrew/opt/zlib/lib "
 export CPPFLAGS="-I/opt/homebrew/opt/openssl@1.1/include -I/opt/homebrew/opt/libgcrypt/include -I /opt/homebrew/opt/libev/include -I /opt/homebrew/opt/zstd/include -I/opt/homebrew/opt/zlib/include "
-export QA06='rahul.malik@10.30.6.206'
-export QA09='rahul.malik@10.30.6.209'
-export QA20='rahul.malik@10.30.7.20'
-export QA02='rahul.malik@10.30.6.202'
-export QA03='rahul.malik@10.30.6.203'
-export QAsatya='rahul.malik@10.30.3.209'
-export QA205='rahul.malik@10.30.3.205'
-export QAfast='rahul.malik@10.30.7.117'
-export QAp='rahul.malik@10.30.7.117'
-export QAmanish='rahul.malik@10.30.6.61'
+EC="rahulmalik@43.205.108.66"
 export md5sum='md5'
 }
 
@@ -246,7 +241,7 @@ function sandbox() {
     export SRC_DATADIR=$HOME/MySQL/data/$BBX
     export LOGDIR=$HOME/MySQL/log/$BOX
     export XC=" --target-dir=$DATADIR --user=root --socket $SOCKET --loose_keyring-file-data=$SRC_DATADIR/key.key"
-    export MO=" --no-defaults --loose-log-error-verbosity=3 --loose-early-plugin-load=keyring_file.so --socket $SOCKET --datadir $DATADIR --loose_keyring_file_data=$DATADIR/key.key --loose-debug-sync-timeout=1000 --loose-enforce-gtid-consistency --server-id=$PORT --loose-gtid-mode=ON --loose-binlog_format=row --log-bin --log-slave-updates --innodb_buffer_pool_size=4GB --loose_innodb_redo_log_capacity=1073741824 "
+    export MO=" --no-defaults --loose-log-error-verbosity=3 --loose-early-plugin-load=keyring_file.so --socket $SOCKET --datadir $DATADIR --loose_keyring_file_data=$DATADIR/key.key --loose-debug-sync-timeout=1000 --loose-enforce-gtid-consistency --server-id=$PORT --loose-gtid-mode=ON --loose-binlog_format=row --log-bin --log-slave-updates --innodb_buffer_pool_size=4GB --loose_innodb_redo_log_capacity=1073741824 --core-file "
     export SRC=$HOME/MySQL/src/$BX
     export CMK='-DDOWNLOAD_BOOST=1 -DWITH_BOOST=../../boost -DCMAKE_EXPORT_COMPILE_COMMANDS=on -DWITH_ZLIB=bundled'
     alias cdd='cd $DATADIR'
@@ -261,7 +256,7 @@ function sandbox() {
     alias cdbl='cd $HOME/MySQL/src/$BX/bld'
     alias gc="git checkout"
     alias gp='git pull'
-    LSCP=$QA20
+    LSCP=$EC
     alias lscp='scp /tmp/1.patch $LSCP:/tmp'
     alias rscp='scp $LSCP:/tmp/1.patch /tmp/1.patch && patch -p1 < /tmp/1.patch'
     alias ttp='git diff --cached > /tmp/1.patch'
@@ -280,6 +275,7 @@ function sandbox() {
     else
       export MYSQL_HOME=$HOME/MySQL/src/$BX/bld/runtime_output_directory
       export MYSQL=$MYSQL_HOME/mysql
+      export MYSQL8=$HOME/MySQL/src/o8/bld/runtime_output_directory/mysql
       export MD=$MYSQL_HOME/mysqld
       export ID=$MYSQL_HOME/ibd2sdi
       export XB=$MYSQL_HOME/xtrabackup
@@ -288,7 +284,7 @@ function sandbox() {
     fi
       export TEST_PATH="$HOME/MySQL/src/$BX/bld/mysql-test"
       alias cdb='$MYSQL  --socket $SOCKET -uroot -e "create database test;"'
-      alias dt='$MYSQL --socket $SOCKET -uroot test'
+      alias dt='$MYSQL8 --socket $SOCKET -uroot test'
 
     #options based on PXB
     if [ -z $BBX ] ; then
@@ -367,7 +363,7 @@ function fo() {
 #example git_push force
 function git_push {
   FORCE=""
-  repo=rahul-`basename $PWD |  cut -d"-" -f1`
+  repo= `basename $PWD |  cut -d"-" -f1`
   if [ -z $1 ]; then
     git push $repo `basename $PWD`
   else
@@ -470,7 +466,7 @@ bp() {
   fi
 
   rm -rf bld  && mkdir bld && cd bld
-  cmake .. -DBASEDIR=$BASEDIR $PCMK -DCMAKE_EXPORT_COMPILE_COMMANDS=on -DCMAKE_BUILD_TYPE=Debug && make -j 
+  cmake .. -DBASEDIR=$BASEDIR $PCMK -DCMAKE_EXPORT_COMPILE_COMMANDS=on -DCMAKE_BUILD_TYPE=Debug -DSTATIC_LIBRARY=OFF && make -j 
   cd .. && rm -rf compile_commands.json && ln -s bld/compile_commands.json .
 
 }
