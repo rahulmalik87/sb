@@ -18,7 +18,7 @@ alias cdc='cd $HOME/study/cpp'
 export xb="$HOME/MySQL/rahul-xb"
 export PS="$HOME/MySQL/src/pstress/bld/src/pstress-ms"
 export GC_TEST="$HOME/MySQL/src/QA/testing/gctest"
-alias cdg='cd $GC_TEST'
+alias cdg='cd ~/MySQL/src/pstress/gctest'
 alias f='find . -name '
 alias bkpup='$XB $XC --backup --stream=xbstream | xbcloud put `date "+%m%d%H%M%Y%S"` $XBCLOUD_CREDENTIALS'
 
@@ -46,10 +46,10 @@ elif [ "mkdir" = $1 ]; then
  mkdir -p $DATADIR
 elif [ "kill" = $1 ]; then
 # todo modify code to only expected mysqld
- killall -9 mysqld
+ kill -ABRT $(ps -ef |grep [m]ysqld  | awk '{print $2}')
  return 0;
 elif [ "con" = $1 ]; then
- $MYSQL8 --socket $SRC/bld/mysql-test/var/tmp/mysqld.$2.sock -uroot  test
+$MYSQL8 --socket  $HOME/MySQL/src/QA/testing/gctest/var/node$2/run/mysqld.sock -uroot  $3
 elif [ "bkp" = $1 ]; then
  if [ -z $BBX ]; then
   echo " use xtrabckup sandox "
@@ -141,10 +141,10 @@ alias cdt='cd $TEST_PATH'
 
 #test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
 
-cr() {
-find . -path ./bld -prune -o \( -name \*.i -o -name \*.ic -o -name \*.h -o -name \*.c -o -name \*.cc -o -name \*.yy -o -name \*.ll -o -name \*.y -o -name \*.I -o -name \*.cpp -o -name \*.txt -o -name \*.hpp \) > cscope.files
-ctags --langmap=c++:+.ic --langmap=c++:+.i -L cscope.files
-\cscope -i ./cscope.files
+function cr() {
+    find . -path ./bld -prune -o \( -name \*.i -o -name \*.ic -o -name \*.h -o -name \*.c -o -name \*.cc -o -name \*.yy -o -name \*.ll -o -name \*.y -o -name \*.I -o -name \*.cpp -o -name \*.txt -o -name \*.hpp -o -name \*.py \) > cscope.files
+    ctags --langmap=c++:+.ic --langmap=c++:+.i -L cscope.files
+    cscope -i ./cscope.files
 }
 
 
@@ -205,7 +205,7 @@ function subbox() {
     else
         ab=`echo $1 | cut -c2-3`
     fi
-    BX=$1
+    export BX=$1
     PORT=$PORT$ab$ver
 }
 
@@ -218,7 +218,6 @@ function sandbox() {
 
     if [ $bx = "o" ] || [ $bx = "p" ] ; then
 	subbox $1;
-	BBX=""
     else
 	sd=`echo $1 | cut -c2`
 	re='^[0-9]+$'
@@ -247,7 +246,7 @@ function sandbox() {
     alias cdd='cd $DATADIR'
     alias cdl='cd $LOGDIR'
     alias cds='cd $SRC'
-    BASEDIR=$HOME/MySQL/build/$BX
+    export BASEDIR=$HOME/MySQL/build/$BX
     alias cdm='cd ~/MySQL/build/$BX'
     alias cdsm='cd ~/MySQL/src/$BX'
     alias cqa='cd ~/MySQL/percona-qa'
@@ -485,3 +484,13 @@ delete_git_waste() {
 
 
 [ `uname` = Darwin ] && darwin
+alias vi='vim'
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+alias pip='pip3'
+export VISUAL=vim
+export EDITOR=vim
+PATH=$PATH":/home/rahulmalik/MySQL/src/pstress/bld/src/"
+
