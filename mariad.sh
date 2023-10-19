@@ -1,0 +1,1 @@
+$MYSQL -utest -ptestpass --host=127.0.0.1 --port=13306 test -e "drop database test; create database test;" && `f *ms` --port=13306,13326 --address=127.0.0.1  --no-tbs --undo-tbs-count=0 --no-enc --no-table-compression  --row-format=none --no-virtual --table 20 --threads 10  --no-ddl --pk-prob=100 --only-cl-sql --insert=100 --seconds 1000

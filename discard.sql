@@ -1,0 +1,10 @@
+alter table tt_1_fk discard tablespace;
+alter table tt_2_fk discard tablespace;
+alter table tt_3_fk discard tablespace;
+alter table tt_4_fk discard tablespace;
+alter table tt_5_fk discard tablespace;
+alter table tt_1 discard tablespace;
+alter table tt_2 discard tablespace;
+alter table tt_3 discard tablespace;
+alter table tt_4 discard tablespace;
+alter table tt_5 discard tablespace;

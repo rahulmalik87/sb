@@ -1,0 +1,9 @@
+alter table tt_2 import tablespace;
+alter table tt_3 import tablespace;
+alter table tt_4 import tablespace;
+alter table tt_5 import tablespace;
+alter table tt_1_fk import tablespace;
+alter table tt_2_fk import tablespace;
+alter table tt_3_fk import tablespace;
+alter table tt_4_fk import tablespace;
+alter table tt_5_fk import tablespace;

@@ -492,5 +492,4 @@ export NVM_DIR="$HOME/.nvm"
 alias pip='pip3'
 export VISUAL=vim
 export EDITOR=vim
-PATH=$PATH":/home/rahulmalik/MySQL/src/pstress/bld/src/"
 
