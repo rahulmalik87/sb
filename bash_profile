@@ -4,7 +4,7 @@ BX=""
 BBX="" #if set means, running with backup directory:w
 PORT=""
 #global alias
-PATH=$PATH":/home/rahulmalik/.local/bin"
+PATH=$PATH":/home/rahulmalik/.local/bin:$HOME/MySQL/src/pstress/bld/src"
 alias tap='patch -p1 < /tmp/1.patch'
 alias csc='cscope -i ./cscope.files'
 alias gs='git status'
@@ -18,8 +18,9 @@ alias cdc='cd $HOME/study/cpp'
 export xb="$HOME/MySQL/rahul-xb"
 export PS="$HOME/MySQL/src/pstress/bld/src/pstress-ms"
 export GC_TEST="$HOME/MySQL/src/QA/testing/gctest"
-alias cdg='cd ~/MySQL/src/pstress/gctest'
+alias cdg='cd /home/rahul/MySQL/src/QA/testing/gctest'
 alias f='find . -name '
+alias p='python3 testcase'
 alias bkpup='$XB $XC --backup --stream=xbstream | xbcloud put `date "+%m%d%H%M%Y%S"` $XBCLOUD_CREDENTIALS'
 
 #sandboxes default is o7 ; o for oracle-mysql , p for perocna-server , x xtrabackup
@@ -49,7 +50,13 @@ elif [ "kill" = $1 ]; then
  kill -ABRT $(ps -ef |grep [m]ysqld  | awk '{print $2}')
  return 0;
 elif [ "con" = $1 ]; then
-$MYSQL8 --socket  $HOME/MySQL/src/QA/testing/gctest/var/node$2/run/mysqld.sock -uroot  $3
+  if [ -z $2 ]; then
+    /home/rahul/MySQL/src/o83/build_relwithdebinfo/bin/mysql -uroot --socket /home/rahul/MySQL/src/QA/testing/gctest/var/node1/run/mysqld.sock  pstress -A
+  else
+    /home/rahul/MySQL/src/o83/build_relwithdebinfo/bin/mysql -uroot --socket /home/rahul/MySQL/src/QA/testing/gctest/var/node$2/run/mysqld.sock  pstress -A
+  fi
+elif [ "dt" = $1 ]; then
+  cd  /home/rahul/MySQL/src/QA/testing/gctest/var/node$2/data
 elif [ "bkp" = $1 ]; then
  if [ -z $BBX ]; then
   echo " use xtrabckup sandox "
@@ -104,12 +111,10 @@ elif [ "bkp_res" = $1 ]; then
  #remake
 elif [ "rm" = $1 ]; then
 	cd $SRC/bld &&  cmake --build .
-	if [ $ver = "7" ] ; then
-		ninja install
-	fi
+    ninja install
 	return;
 elif [ "clone" = $1 ]; then
-  if [ -z $2 ]; then 
+  if [ -z $2 ]; then
     echo "n clone --branch=mysql-8.0.31"
     echo "you can also set DEPTH, DEPTH=30 && n clone --branch=mysql-8.0.31"
     return
@@ -243,10 +248,10 @@ function sandbox() {
     export MO=" --no-defaults --loose-log-error-verbosity=3 --loose-early-plugin-load=keyring_file.so --socket $SOCKET --datadir $DATADIR --loose_keyring_file_data=$DATADIR/key.key --loose-debug-sync-timeout=1000 --loose-enforce-gtid-consistency --server-id=$PORT --loose-gtid-mode=ON --loose-binlog_format=row --log-bin --log-slave-updates --innodb_buffer_pool_size=4GB --loose_innodb_redo_log_capacity=1073741824 --core-file "
     export SRC=$HOME/MySQL/src/$BX
     export CMK='-DDOWNLOAD_BOOST=1 -DWITH_BOOST=../../boost -DCMAKE_EXPORT_COMPILE_COMMANDS=on -DWITH_ZLIB=bundled'
-    alias cdd='cd $DATADIR'
     alias cdl='cd $LOGDIR'
     alias cds='cd $SRC'
-    export BASEDIR=$HOME/MySQL/build/$BX
+    export BASEDIR=$HOME/MySQL/src/$BX/build_release
+    export MBL=$BASEDIR/bin/mysqlbinlog
     alias cdm='cd ~/MySQL/build/$BX'
     alias cdsm='cd ~/MySQL/src/$BX'
     alias cqa='cd ~/MySQL/percona-qa'
@@ -304,7 +309,7 @@ function sandbox() {
     fi;
     n mkdir
 	REMOTE="https://github.com"
-	if [ -z $BBX ]; then 
+	if [ -z $BBX ]; then
 	  if [[ $BX == "o"* ]]; then
 	    REMOTE="${REMOTE}/mysql/mysql-server"
 	  else
@@ -361,12 +366,12 @@ function fo() {
 
 #example git_push force
 function git_push {
+  repo=`git branch --show-current | cut -d'-' -f1`
   FORCE=""
-  repo= `basename $PWD |  cut -d"-" -f1`
   if [ -z $1 ]; then
-    git push $repo `basename $PWD`
+    git push $repo `git branch --show-current`
   else
-    git push $repo `basename $PWD` --force
+    git push $repo `git branch --show-current` -f
   fi
 }
 
@@ -453,19 +458,23 @@ bp() {
 	  return
   fi
 
-  local PCMK; 
-  if [ $m_version == "oracle" ]; then 
+
+  local PCMK;
+  if [ $m_version == "oracle" ]; then
     PCMK=" -DMYSQL=ON"
   elif [ $m_version == "ps" ];  then
     PCMK=" -DPERCONASERVER=ON"
   fi
-  if [ ! `ls -d pstress` ]; then  
+  if [ ! -z $1 ] && [ $1 == "debug" ]; then
+    PCMK=$PCMK" -DCMAKE_BUILD_TYPE=Debug"
+  fi
+  if [ ! `ls -d pstress` ]; then
     echo "not in pstress source "
-    return 
+    return
   fi
 
   rm -rf bld  && mkdir bld && cd bld
-  cmake .. -DBASEDIR=$BASEDIR $PCMK -DCMAKE_EXPORT_COMPILE_COMMANDS=on -DCMAKE_BUILD_TYPE=Debug -DSTATIC_LIBRARY=OFF && make -j 
+  cmake .. -DBASEDIR=$BASEDIR $PCMK -DCMAKE_EXPORT_COMPILE_COMMANDS=on -DSTATIC_LIBRARY=OFF $PCMK  && make -j
   cd .. && rm -rf compile_commands.json && ln -s bld/compile_commands.json .
 
 }
@@ -493,3 +502,68 @@ alias pip='pip3'
 export VISUAL=vim
 export EDITOR=vim
 
+upload_to_aws() {
+  if [ -z $1 ]; then
+    echo "upload_to_aws directory "
+    return
+  fi
+    tar -cvf - $1/ | pigz -p 10 > $1.tar.gz
+
+  aws s3 cp $1.tar.gz s3://codership-uploads
+
+  echo "to download use https://codership-uploads.s3.eu-central-1.amazonaws.com/$1.tar.gz"
+}
+alias dk="/home/rahul/MySQL/src/pstress/gctest/scripts/run-docker-env.sh"
+
+get_aws_link() {
+  if [ -z $1 ]; then
+    echo "get_aws_link mariadb_fk_issue_1032_after.tar.gz"
+    return
+  fi
+  echo https://codership-uploads.s3.eu-central-1.amazonaws.com/$1
+}
+
+cdd() {
+  if [ -z $1 ]; then
+    cd $HOME/workdir/$BX/1/var
+    return
+  fi
+  cd $HOME/workdir/$BX/$1/var
+}
+
+crp() {
+  find testcases/ scripts/ gctest/ -type f -name "*py" > cscope.files
+  ctags --languages=python -L cscope.files
+  cscope -b -q
+  cscope
+}
+
+function get_matching_pids() {
+    local process_name="$1"
+    local matching_pids=()
+    while IFS= read -r line; do
+        pid=$(echo "$line" | awk '{print $1}')
+        cmd=$(echo "$line" | cut -d' ' -f2-)
+        if [[ $cmd == *"$BX"* ]]; then
+            matching_pids+=($pid)
+        fi
+    done < <(ps -e -o pid,cmd | grep "$process_name" | grep -v grep)
+    echo "${matching_pids[@]}"
+}
+
+
+function gdb_connect() {
+    local process_name="$1"
+    local matching_pids=($(get_matching_pids "$process_name"))
+
+    if [[ ${#matching_pids[@]} -eq 1 ]]; then
+        gdb -p "${matching_pids[0]}"
+    elif [[ ${#matching_pids[@]} -gt 1 ]]; then
+        echo "Multiple matching processes found for $process_name with $BX in their path"
+    else
+        echo "No matching processes found for $process_name with $BX in their path"
+    fi
+}
+
+
+export PATH=/home/rahul/.tiup/bin:$PATH
